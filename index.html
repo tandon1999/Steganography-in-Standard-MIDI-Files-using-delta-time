@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steganography in Standard MIDI Files using delta time</title>
+</head>
+
+<body>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            color: white;
+        }
+
+        .hero {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(to right, #000000, #141414);
+            background-position: center;
+            position: absolute;
+            background-size: cover;
+        }
+
+        h1 {
+            text-align: center;
+            background: local;
+            display: block;
+            font-size: 2em;
+            margin-top: 0.67em;
+            margin-bottom: 0.67em;
+            margin-left: 0;
+            margin-right: 0;
+            font-weight: bold;
+        }
+
+        .form-box {
+            height: 360px;
+            width: 380px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px;
+            position: relative;
+            margin: 6% auto;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .button-box {
+            width: 220px;
+            margin: 35px auto;
+            position: relative;
+            box-shadow: 0 0 20px 9px #ff61241f;
+            border-radius: 30px;
+        }
+
+        .toggle-btn {
+            padding: 10px 30px;
+            cursor: pointer;
+            border: 0;
+            background: transparent;
+            outline: none;
+            position: relative;
+        }
+
+
+
+        /* .toggle-btn:before {
+            top: 0;
+            left: 0;
+            position: absolute;
+            width: 110px;
+            height: 100%;
+            background: linear-gradient(to right, #ff105f, #ffad06);
+            border-radius: 30px;
+            transition: 0.5s;
+        } */
+
+        #btn {
+            top: 0;
+            left: 0;
+            position: absolute;
+            width: 110px;
+            height: 100%;
+            background: linear-gradient(to right, #ff105f, #ffad06);
+            border-radius: 30px;
+            transition: 0.5s;
+        }
+
+        .social-icons {
+            margin: 30px auto;
+            text-align: center;
+        }
+
+        .social-icons img {
+            width: 30px;
+            margin: 0 12px;
+            box-shadow: 0 0 20px 0 #7f7f7f3d;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .input-group {
+            top: 120px;
+            position: absolute;
+            width: 280px;
+            transition: 0.5s;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 0;
+            margin: 5px 0;
+            border-left: 0;
+            border-top: 0;
+            border-right: 0;
+            border-bottom: 1px solid #999;
+            outline: none;
+            background: transparent;
+        }
+
+        .submit-btn {
+            width: 85%;
+            padding: 10px 30px;
+            cursor: pointer;
+            display: block;
+            margin: auto;
+            background: linear-gradient(to right, #ff105f, #ffad06);
+            border: 0;
+            outline: none;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+
+        .check-box {
+            margin: 30px 10px 30px 0;
+        }
+
+        span {
+            color: #777;
+            font-size: 12px;
+            bottom: 68px;
+            position: absolute;
+        }
+
+        .login {
+            left: 100px;
+        }
+
+        .register {
+            left: 450px;
+        }
+    </style>
+    <div class="hero">
+        <h1>Steganography in Standard MIDI Files using Delta Time</h1>
+        <div class="form-box">
+            <div class="button-box">
+                <div id="btn"></div>
+                <button type="button" class="toggle-btn" onclick="login()">Login</button>
+                <button type="button" class="toggle-btn" onclick="register()">Register</button>
+            </div>
+            <form id="login" class="input-group">
+                <input id="email" type="email" class="input-field" placeholder="Email" required>
+                <input id="password" type="password" class="input-field" placeholder="Enter password" required>
+                <button onclick="signinwauth(event)" type="submit" class="submit-btn"
+                    style="margin-top: 32px;">Login</button>
+            </form>
+            <form id="register" class="input-group">
+                <input id="enteremail" type="email" class="input-field" placeholder="Enter email" required>
+                <input id="enterpassword" type="password" class="input-field" placeholder="Enter password" required>
+                <input id="confirmpassword" type="password" class="input-field" placeholder="Confirm password" required>
+                <button onclick="signupwauth(event)" class="submit-btn" style="margin-top: 12px;">Register</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+<script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.4.3/firebase-storage.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBH4l3kPVaJogYcFCdSpo7PGud6OAs5IdI",
+        authDomain: "midifile-ae2b4.firebaseapp.com",
+        databaseURL: "https://midifile-ae2b4-default-rtdb.firebaseio.com",
+        projectId: "midifile-ae2b4",
+        storageBucket: "midifile-ae2b4.appspot.com",
+        messagingSenderId: "832519314926",
+        appId: "1:832519314926:web:83219b450297fd50ae42ff",
+        measurementId: "G-WRTJ8LK86V"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    // const analytics = getAnalytics(app);
+
+    var x = document.getElementById("login");
+    var y = document.getElementById("register");
+    var z = document.getElementById("btn");
+
+    function register() {
+        x.style.left = "-400px";
+        y.style.left = "50px";
+        z.style.left = "0";
+    }
+
+    function login() {
+        x.style.left = "50px";
+        y.style.left = "450px";
+        z.style.left = "0px";
+    }
+
+
+    const signupWithAuth = async (event) => {
+        event.preventDefault();
+
+        if (password === confirmPassword) {
+            try {
+                const { user } = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                swal({
+                    title: 'SUCCESS!!',
+                    text: 'Your account has been created successfully!',
+                    icon: 'success',
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Ok!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        swal('SUCCESS!!', 'Please verify your email!', 'success');
+                    }
+                });
+            } catch (error) {
+                if (error.code === 'auth/invalid-email') {
+                    swal({
+                        title: 'WARNING!!',
+                        text: 'Enter a valid email address!',
+                        icon: 'warning',
+                        showCancelButton: false,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Ok!',
+                    });
+                } else if (error.code === 'auth/email-already-in-use') {
+                    swal({
+                        title: 'WARNING!!',
+                        text: 'You already have an account!',
+                        icon: 'warning',
+                        showCancelButton: false,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Ok!',
+                    });
+                }
+            }
+        } else {
+            swal({
+                title: 'WARNING!!',
+                text: 'Passwords do not match!',
+                icon: 'warning',
+                showCancelButton: false,
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Ok!',
+            });
+        }
+    };
+
+    function signinwauth(event) {
+        event.preventDefault();
+        var email = document.getElementById("email").value;
+        var password = document.getElementById("password").value;
+
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then((user) => {
+                window.location.href = "/upload";
+            }).catch((error) => {
+                if (error.message === "The email address is badly formatted.") {
+                    swal({
+                        title: "WARNING!!",
+                        text: "Enter a valid email address!",
+                        icon: "warning",
+                        showCancelButton: false,
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "Ok!"
+                    });
+                } else if (error.message === "The password is invalid or the user does not have a password.") {
+                    swal({
+                        title: "WARNING!!",
+                        text: "Enter a valid password!",
+                        icon: "warning",
+                        showCancelButton: false,
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "Ok!"
+                    });
+                } else if (error.message === "There is no user record corresponding to this identifier. The user may have been deleted.") {
+                    swal({
+                        title: "WARNING!!",
+                        text: "Please Sign Up before logging in!",
+                        icon: "warning",
+                        showCancelButton: false,
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "Ok!"
+                    });
+                }
+            });
+    }
+</script>
+</body>
+
+</html>
